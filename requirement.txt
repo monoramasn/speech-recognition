@@ -1,0 +1,10 @@
+argparse
+datasets
+librosa
+evaluate
+jiwer
+gradio
+openai-whisper
+
+
+
