@@ -13,13 +13,13 @@ from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProce
 
 from datasets import load_dataset, load_metric
 #voxpopuli_dataset = load_dataset("facebook/voxpopuli", "it", split="train+test")
-voxpopuli_dataset = load_dataset("facebook/voxpopuli", "de")
+voxpopuli_dataset = load_dataset("facebook/voxpopuli", "hr")
 
 voxpopuli_dataset
 #dataset_lt = voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
-dataset_de = voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'speaker_id', 'is_gold_transcript', 'accent'])
+dataset_hr = voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'speaker_id', 'is_gold_transcript', 'accent'])
 
-dataset_de
+dataset_hr
 
 gradient_checkpointing = True
 freeze_feature_encoder = False
@@ -93,7 +93,7 @@ def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
     # Apply preprocessing and ensure 'labels' key is added
-dataset_en1 = dataset_en.map(prepare_dataset, batch_size=32)
+dataset_hr1 = dataset_hr.map(prepare_dataset, batch_size=32)
 
 @dataclass
 class DataCollatorSpeechSeq2SeqWithPadding:
@@ -325,8 +325,8 @@ from transformers import Trainer
 trainer = Seq2SeqTrainer(
     args=training_args,
     model=model1,
-    train_dataset=dataset_de1["train"],
-    eval_dataset=dataset_de1["test"],
+    train_dataset=dataset_hr1["train"],
+    eval_dataset=dataset_hr1["test"],
     data_collator=data_collator,
     compute_metrics=compute_metrics,
     tokenizer=processor.feature_extractor,
