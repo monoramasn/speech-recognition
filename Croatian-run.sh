@@ -13,5 +13,5 @@ conda activate /home/nkx870/anaconda3/envs/monorama
 # ro de en fr pl it es
 for language in hr
 do
-    python3.9 program.py --language $language --model_size large
+    python3.9 Croatian.py --language $language --model_size large
 done
