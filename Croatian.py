@@ -33,8 +33,8 @@ normalizer = BasicTextNormalizer()
 
 model_checkpoint= "openai/whisper-large"
 feature_extractor = WhisperFeatureExtractor.from_pretrained(model_checkpoint)
-tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="German", task="transcribe")
-processor = WhisperProcessor.from_pretrained(model_checkpoint, language="German", task="transcribe")
+tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="Croatian", task="transcribe")
+processor = WhisperProcessor.from_pretrained(model_checkpoint, language="Croatian", task="transcribe")
 model = WhisperForConditionalGeneration.from_pretrained(model_checkpoint)
 
 if model.config.decoder_start_token_id is None:
