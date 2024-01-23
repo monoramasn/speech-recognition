@@ -13,13 +13,13 @@ from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProce
 
 from datasets import load_dataset, load_metric
 #voxpopuli_dataset = load_dataset("facebook/voxpopuli", "it", split="train+test")
-voxpopuli_dataset = load_dataset("facebook/voxpopuli", "de")
+voxpopuli_dataset = load_dataset("facebook/voxpopuli", "cs")
 
 voxpopuli_dataset
 #dataset_lt = voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
-dataset_de = voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'speaker_id', 'is_gold_transcript', 'accent'])
+dataset_cs = voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'speaker_id', 'is_gold_transcript', 'accent'])
 
-dataset_de
+dataset_cs
 
 gradient_checkpointing = True
 freeze_feature_encoder = False
@@ -33,8 +33,8 @@ normalizer = BasicTextNormalizer()
 
 model_checkpoint= "openai/whisper-large"
 feature_extractor = WhisperFeatureExtractor.from_pretrained(model_checkpoint)
-tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="German", task="transcribe")
-processor = WhisperProcessor.from_pretrained(model_checkpoint, language="German", task="transcribe")
+tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="Czech", task="transcribe")
+processor = WhisperProcessor.from_pretrained(model_checkpoint, language="Czech", task="transcribe")
 model = WhisperForConditionalGeneration.from_pretrained(model_checkpoint)
 
 if model.config.decoder_start_token_id is None:
@@ -93,7 +93,7 @@ def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
     # Apply preprocessing and ensure 'labels' key is added
-dataset_en1 = dataset_en.map(prepare_dataset, batch_size=32)
+dataset_cs1 = dataset_cs.map(prepare_dataset, batch_size=32)
 
 @dataclass
 class DataCollatorSpeechSeq2SeqWithPadding:
@@ -325,8 +325,8 @@ from transformers import Trainer
 trainer = Seq2SeqTrainer(
     args=training_args,
     model=model1,
-    train_dataset=dataset_de1["train"],
-    eval_dataset=dataset_de1["test"],
+    train_dataset=dataset_cs1["train"],
+    eval_dataset=dataset_cs1["test"],
     data_collator=data_collator,
     compute_metrics=compute_metrics,
     tokenizer=processor.feature_extractor,
