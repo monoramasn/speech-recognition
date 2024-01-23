@@ -15,7 +15,7 @@ from datasets import load_dataset, load_metric
 
 Cs_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "Cs", split=['train', 'test'])
 
-dataset = lt_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+dataset = Cs_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
 
 
 #dataset
