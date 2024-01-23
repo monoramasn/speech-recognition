@@ -15,7 +15,8 @@ from datasets import load_dataset, load_metric
 
 hr_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "hr", split=['train', 'test'])
 
-dataset = hr_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+train_dataset = hr_voxpopuli_dataset["train"].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+test_dataset = hr_voxpopuli_dataset["test"].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
 
 
 #dataset
@@ -92,7 +93,8 @@ def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
     # Apply preprocessing and ensure 'labels' key is added
-dataset = dataset.map(prepare_dataset, batch_size=32)
+train_dataset = train_dataset.map(prepare_dataset, batch_size=32)
+test_dataset = test_dataset.map(prepare_dataset, batch_size=32)
 
 @dataclass
 class DataCollatorSpeechSeq2SeqWithPadding:
@@ -324,8 +326,8 @@ from transformers import Trainer
 trainer = Seq2SeqTrainer(
     args=training_args,
     model=model1,
-    train_dataset=dataset["train"],
-    eval_dataset=dataset["test"],
+    train_dataset=train_dataset,
+    eval_dataset=test_dataset,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
     tokenizer=processor.feature_extractor,
