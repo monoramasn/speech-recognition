@@ -319,7 +319,7 @@ training_args = Seq2SeqTrainingArguments(
   weight_decay=0.005,
   warmup_steps=1000,
   save_total_limit=2,
-  push_to_hub=True,
+  push_to_hub=False,
 )
 
 from transformers import Trainer
