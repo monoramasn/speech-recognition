@@ -13,9 +13,9 @@ from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProce
 
 from datasets import load_dataset, load_metric
 
-Hr_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "Hr", split=['train', 'test'])
+hr_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "hr", split=['train', 'test'])
 
-dataset = Hr_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+dataset = hr_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
 
 
 #dataset
