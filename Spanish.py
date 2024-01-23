@@ -13,9 +13,9 @@ from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProce
 
 from datasets import load_dataset, load_metric
 
-Es_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "Es", split=['train', 'test'])
+es_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "es", split=['train', 'test'])
 
-dataset = Es_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+dataset = es_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
 
 
 #dataset
@@ -32,8 +32,8 @@ normalizer = BasicTextNormalizer()
 
 model_checkpoint= "openai/whisper-large"
 feature_extractor = WhisperFeatureExtractor.from_pretrained(model_checkpoint)
-tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="German", task="transcribe")
-processor = WhisperProcessor.from_pretrained(model_checkpoint, language="German", task="transcribe")
+tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="Spanish", task="transcribe")
+processor = WhisperProcessor.from_pretrained(model_checkpoint, language="Spanish", task="transcribe")
 model = WhisperForConditionalGeneration.from_pretrained(model_checkpoint)
 
 if model.config.decoder_start_token_id is None:
