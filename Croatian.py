@@ -94,8 +94,8 @@ def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
     # Apply preprocessing and ensure 'labels' key is added
-train_dataset = train_dataset.map(prepare_dataset, batch_size=4)
-test_dataset = test_dataset.map(prepare_dataset, batch_size=4)
+train_dataset = train_dataset.map(prepare_dataset, batch_size=8)
+test_dataset = test_dataset.map(prepare_dataset, batch_size=8)
 
 @dataclass
 class DataCollatorSpeechSeq2SeqWithPadding:
