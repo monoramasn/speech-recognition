@@ -3,8 +3,8 @@ import torch.nn as nn
 import torch.optim as optim
 import argparse
 import evaluate
-import torch_optimizer as optim
-from transformers import AdamW
+#import torch_optimizer as optim
+#from transformers import AdamW
 from dataclasses import dataclass
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
