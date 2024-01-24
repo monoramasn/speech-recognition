@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --job-name=large
-# SBATCH --cpus-per-task=3 --mem=2048000M
 # SBATCH --time=00:05:00
 #SBATCH -p gpu --gres=gpu:4
 #SBATCH -p gpu --gres=gpu:a100:1
