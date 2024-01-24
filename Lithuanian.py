@@ -15,7 +15,10 @@ from datasets import load_dataset, load_metric
 
 lt_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "lt", split=['train', 'test'])
 
-dataset = lt_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+train_dataset = lt_voxpopuli_dataset[0].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+test_dataset = lt_voxpopuli_dataset[1].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+
+
 
 
 #dataset
@@ -317,7 +320,7 @@ training_args = Seq2SeqTrainingArguments(
   weight_decay=0.005,
   warmup_steps=1000,
   save_total_limit=2,
-  push_to_hub=True,
+  push_to_hub=False,
 )
 
 from transformers import Trainer
