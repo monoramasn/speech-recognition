@@ -11,7 +11,7 @@ eval "$(conda shell.bash hook)"
 nvidia-smi
 conda activate /home/nkx870/anaconda3/envs/monorama
 
-# ro de en fr pl it es
+# ro de en fr pl it 
 for language in hr
 do
     python3.9 Croatian.py --language $language --model_size large
