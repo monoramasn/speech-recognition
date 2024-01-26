@@ -96,8 +96,8 @@ def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
     # Apply preprocessing and ensure 'labels' key is added
-train_dataset = train_dataset.map(prepare_dataset, batch_size=8)
-test_dataset = test_dataset.map(prepare_dataset, batch_size=8)
+train_dataset = train_dataset.map(prepare_dataset, batch_size=4)
+test_dataset = test_dataset.map(prepare_dataset, batch_size=4)
 
 @dataclass
 class DataCollatorSpeechSeq2SeqWithPadding:
@@ -310,11 +310,12 @@ from transformers import TrainingArguments
 training_args = Seq2SeqTrainingArguments(
   output_dir=repo_name,
   group_by_length=True,
-  per_device_train_batch_size=8,
+  per_device_train_batch_size=4,
+  gradient_accumulation_steps=4,  
   evaluation_strategy="steps",
-  num_train_epochs=50,
-  #fp16=False,
-  gradient_checkpointing=False,
+  num_train_epochs=25,
+  fp16=True,
+  gradient_checkpointing=True,
   save_steps=50,
   eval_steps=50,
   logging_steps=50,
@@ -335,6 +336,9 @@ trainer = Seq2SeqTrainer(
     compute_metrics=compute_metrics,
     tokenizer=processor.feature_extractor,
 )
+
+import torch
+torch.cuda.empty_cache()
 
 trainer.train()
 trainer.evaluate()
