@@ -335,6 +335,9 @@ trainer = Seq2SeqTrainer(
     tokenizer=processor.feature_extractor,
 )
 
+import torch
+torch.cuda.empty_cache()
+
 trainer.train()
 trainer.evaluate()
 
