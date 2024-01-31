@@ -15,6 +15,7 @@ from datasets import load_dataset, load_metric
 
 lt_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "lt", split=['train', 'test'])
 
+
 train_dataset = lt_voxpopuli_dataset[0].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
 test_dataset = lt_voxpopuli_dataset[1].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
 
@@ -33,7 +34,7 @@ do_remove_punctuation = False
 normalizer = BasicTextNormalizer()
 
 
-model_checkpoint= "openai/whisper-large"
+model_checkpoint= "openai/whisper-small"
 feature_extractor = WhisperFeatureExtractor.from_pretrained(model_checkpoint)
 tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="Lithuanian", task="transcribe")
 processor = WhisperProcessor.from_pretrained(model_checkpoint, language="Lithuanian", task="transcribe")
