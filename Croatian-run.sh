@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=large
-#SBATCH --time=1-00:00:00
+#SBATCH --time=10:00:00
 #SBATCH -p gpu --gres=gpu:a100:1
 #SBATCH --output=logs/large.log
 #SBATCH --ntasks=1 --cpus-per-task=8 --mem=64GB
