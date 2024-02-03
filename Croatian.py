@@ -24,6 +24,7 @@ test_dataset = hr_voxpopuli_dataset[1].remove_columns(['audio_id', 'language', '
 
 #dataset
 
+from transformers.models.whisper.english_normalizer import BasicTextNormalizer
 gradient_checkpointing = True
 freeze_feature_encoder = False
 freeze_encoder = False
@@ -33,11 +34,14 @@ do_lower_case = False
 do_remove_punctuation = False
 normalizer = BasicTextNormalizer()
 
+from dataclasses import dataclass
 
-model_checkpoint= "openai/whisper-large"
+from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration, Seq2SeqTrainingArguments,Seq2SeqTrainer
+
+model_checkpoint= "openai/whisper-base"
 feature_extractor = WhisperFeatureExtractor.from_pretrained(model_checkpoint)
-tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="Croatian", task="transcribe")
-processor = WhisperProcessor.from_pretrained(model_checkpoint, language="Croatian", task="transcribe")
+tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="Lithuanian", task="transcribe")
+processor = WhisperProcessor.from_pretrained(model_checkpoint, language="Lithuanian", task="transcribe")
 model = WhisperForConditionalGeneration.from_pretrained(model_checkpoint)
 
 if model.config.decoder_start_token_id is None:
@@ -88,17 +92,19 @@ def prepare_dataset(batch):
 
     return batch
 
-
 max_label_length = model.config.max_length
 min_input_length = 0.0
 max_input_length = 30.0
 def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
-    # Apply preprocessing and ensure 'labels' key is added
 train_dataset = train_dataset.map(prepare_dataset, batch_size=2)
+#test_dataset = test_dataset.map(prepare_dataset, batch_size=8)
+
+#train_dataset = train_dataset.map(prepare_dataset, batch_size=8)
 test_dataset = test_dataset.map(prepare_dataset, batch_size=2)
 
+from typing import Any, Dict, List, Union
 @dataclass
 class DataCollatorSpeechSeq2SeqWithPadding:
     processor: Any
@@ -127,15 +133,10 @@ class DataCollatorSpeechSeq2SeqWithPadding:
         return batch
 
 data_collator = DataCollatorSpeechSeq2SeqWithPadding(processor=processor)
-
 print('DATASET PREPARATION COMPLETED')
 
 import numpy as np
-#metric=evaluate.load_metric("wer")
-
-from datasets import load_metric
-#metric = load_metric("wer")
-wer_metric = evaluate.load("wer")
+wer_metric = load_metric("wer")
 def compute_metrics(pred):
     pred_logits = pred.predictions
     pred_ids = np.argmax(pred_logits, axis=-1)
@@ -150,18 +151,11 @@ def compute_metrics(pred):
 
     return {"wer": wer}
 
-    model
+model
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-
-#parser = argparse.ArgumentParser()
-#parser.add_argument("--language", type=str, default="")
-#parser.add_argument("--model_size", type=str, default="")
-#args = parser.parse_args()
-#language = args.language
 
 # Attention mechanism
 class WhisperAttention(nn.Module):
@@ -294,7 +288,7 @@ class WhisperForfinetune(nn.Module):
           outputs['loss'] = loss
 
         return outputs
-        
+
 # Instantiate the model
 model1 = WhisperForfinetune()
 
@@ -305,16 +299,25 @@ model1 = WhisperForfinetune()
 # Forward pass
 #output = model1(input_features, labels)
 
+
+import torch
+import gc
+
+# Before starting the training, clear any residual memory
+gc.collect()
+torch.cuda.empty_cache()
+
+
 from transformers import TrainingArguments
 
 training_args = Seq2SeqTrainingArguments(
   output_dir=repo_name,
   group_by_length=True,
   per_device_train_batch_size=2,
-  gradient_accumulation_steps=2,  
+  gradient_accumulation_steps=2,
   evaluation_strategy="steps",
-  num_train_epochs=25,
-  fp16=False,
+  num_train_epochs=20,
+  fp16=True,
   gradient_checkpointing=False,
   save_steps=50,
   eval_steps=50,
@@ -325,20 +328,24 @@ training_args = Seq2SeqTrainingArguments(
   save_total_limit=2,
   push_to_hub=False,
 )
-
 from transformers import Trainer
 trainer = Seq2SeqTrainer(
-    args=training_args,
     model=model1,
+    args=training_args,
     train_dataset=train_dataset,
     eval_dataset=test_dataset,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
     tokenizer=processor.feature_extractor,
 )
-
 import torch
 torch.cuda.empty_cache()
 
 trainer.train()
-trainer.evaluate()
+
+
+
+   
+        
+   
+
