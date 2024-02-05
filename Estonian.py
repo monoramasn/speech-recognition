@@ -11,15 +11,17 @@ from datasets import DatasetDict, Audio, load_from_disk, concatenate_datasets
 from transformers.models.whisper.english_normalizer import BasicTextNormalizer
 from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration, Seq2SeqTrainingArguments, Seq2SeqTrainer
 
+
 from datasets import load_dataset, load_metric
 
 et_voxpopuli_dataset = load_dataset("facebook/voxpopuli", "et", split=['train', 'test'])
 
-dataset = et_voxpopuli_dataset.remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+train_dataset = et_voxpopuli_dataset[0].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
+
+test_dataset = et_voxpopuli_dataset[1].remove_columns(['audio_id', 'language', 'raw_text', 'gender', 'speaker_id', 'is_gold_transcript', 'accent'])
 
 
-#dataset
-
+from transformers.models.whisper.english_normalizer import BasicTextNormalizer
 gradient_checkpointing = True
 freeze_feature_encoder = False
 freeze_encoder = False
@@ -29,13 +31,15 @@ do_lower_case = False
 do_remove_punctuation = False
 normalizer = BasicTextNormalizer()
 
+from dataclasses import dataclass
 
-model_checkpoint= "openai/whisper-large"
+from transformers import WhisperFeatureExtractor, WhisperTokenizer, WhisperProcessor, WhisperForConditionalGeneration, Seq2SeqTrainingArguments,Seq2SeqTrainer
+
+model_checkpoint= "openai/whisper-small"
 feature_extractor = WhisperFeatureExtractor.from_pretrained(model_checkpoint)
 tokenizer = WhisperTokenizer.from_pretrained(model_checkpoint, language="Estonian", task="transcribe")
 processor = WhisperProcessor.from_pretrained(model_checkpoint, language="Estonian", task="transcribe")
 model = WhisperForConditionalGeneration.from_pretrained(model_checkpoint)
-
 if model.config.decoder_start_token_id is None:
     raise ValueError("Make sure that `config.decoder_start_token_id` is correctly defined")
 
@@ -53,8 +57,10 @@ model.config.suppress_tokens = []
 if gradient_checkpointing:
     model.config.use_cache = False
 
+
 model_checkpoint_name = model_checkpoint.split("/")[-1]
 repo_name = f"{model_checkpoint_name}-demo-colab"
+
 
 def prepare_dataset(batch):
     # Load and resample audio data to the expected sampling rate
@@ -79,11 +85,10 @@ def prepare_dataset(batch):
     if do_remove_punctuation:
         transcription = normalizer(transcription).strip()
 
-    # Encode target text to label ids
+ # Encode target text to label ids
     batch["labels"] = processor.tokenizer(transcription, padding="max_length", max_length=max_label_length).input_ids
 
     return batch
-
 
 max_label_length = model.config.max_length
 min_input_length = 0.0
@@ -91,14 +96,21 @@ max_input_length = 30.0
 def is_in_length_range(length, labels):
     return min_input_length < length < max_input_length and 0 < len(labels) < max_label_length
 
-    # Apply preprocessing and ensure 'labels' key is added
-dataset = dataset.map(prepare_dataset, batch_size=32)
 
+train_dataset = train_dataset.map(prepare_dataset, batch_size=2)
+#test_dataset = test_dataset.map(prepare_dataset, batch_size=8)
+
+#train_dataset = train_dataset.map(prepare_dataset, batch_size=8)
+test_dataset = test_dataset.map(prepare_dataset, batch_size=2)
+
+
+
+from typing import Any, Dict, List, Union
 @dataclass
 class DataCollatorSpeechSeq2SeqWithPadding:
     processor: Any
 
-    def __call__(self, features: List[Dict[str, Union[List[int], torch.Tensor]]]) -> Dict[str, torch.Tensor]:
+ def __call__(self, features: List[Dict[str, Union[List[int], torch.Tensor]]]) -> Dict[str, torch.Tensor]:
         # split inputs and labels since they have to be of different lengths and need different padding methods
         # first treat the audio inputs by simply returning torch tensors
         input_features = [{"input_features": feature["input_features"]} for feature in features]
@@ -122,7 +134,6 @@ class DataCollatorSpeechSeq2SeqWithPadding:
         return batch
 
 data_collator = DataCollatorSpeechSeq2SeqWithPadding(processor=processor)
-
 print('DATASET PREPARATION COMPLETED')
 
 import numpy as np
@@ -145,18 +156,10 @@ def compute_metrics(pred):
 
     return {"wer": wer}
 
-    model
-
+     model
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-
-#parser = argparse.ArgumentParser()
-#parser.add_argument("--language", type=str, default="")
-#parser.add_argument("--model_size", type=str, default="")
-#args = parser.parse_args()
-#language = args.language
 
 # Attention mechanism
 class WhisperAttention(nn.Module):
@@ -220,11 +223,12 @@ class WhisperEncoder(nn.Module):
 
         x += position_embeddings
 
-        for layer in self.layers:
+ for layer in self.layers:
             x = layer(x)
 
         x = self.layer_norm(x)
         return x
+
 
 # Decoder layer
 class WhisperDecoderLayer(nn.Module):
@@ -241,7 +245,8 @@ class WhisperDecoderLayer(nn.Module):
 
     def forward(self, x, encoder_output):
         self_attn_output = self.self_attn(x, x, x)
-        x = self.self_attn_layer_norm(x + self_attn_output)
+
+ x = self.self_attn_layer_norm(x + self_attn_output)
 
         enc_attn_output = self.encoder_attn(encoder_output, encoder_output, x)
         x = self.encoder_attn_layer_norm(x + enc_attn_output)
@@ -249,6 +254,8 @@ class WhisperDecoderLayer(nn.Module):
         fc_output = self.fc2(self.activation_fn(self.fc1(x)))
         x = self.final_layer_norm(x + fc_output)
         return x
+
+
 # Decoder
 class WhisperDecoder(nn.Module):
     def __init__(self, d_model, n_layers, d_ff, max_len, vocab_size):
@@ -262,7 +269,7 @@ class WhisperDecoder(nn.Module):
         position_ids = torch.arange(x.size(1), dtype=torch.long, device=x.device)
         x = self.embed_tokens(x) + self.embed_positions(position_ids)
 
-        for layer in self.layers:
+for layer in self.layers:
             x = layer(x, encoder_output)
 
         x = self.layer_norm(x)
@@ -285,30 +292,34 @@ class WhisperForfinetune(nn.Module):
         if labels is not None:
           loss_fn = nn.CrossEntropyLoss()
           # Reshape labels and logits to compute loss, adjust dimensions as necessary
-          loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+
+ loss = loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
           outputs['loss'] = loss
 
         return outputs
-        
+
 # Instantiate the model
 model1 = WhisperForfinetune()
 
-# Example input (dummy data)
-#input_features = torch.randn(1, 80, 3000)  # Batch size x Input dimension x Sequence length
-#labels = torch.randint(0, 51865, (1, 100))  # Example target token sequence
 
-# Forward pass
-#output = model1(input_features, labels)
+import torch
+import gc
+
+# Before starting the training, clear any residual memory
+gc.collect()
+torch.cuda.empty_cache()
+
 
 from transformers import TrainingArguments
 
 training_args = Seq2SeqTrainingArguments(
   output_dir=repo_name,
   group_by_length=True,
-  per_device_train_batch_size=8,
+  per_device_train_batch_size=2,
+  gradient_accumulation_steps=2,
   evaluation_strategy="steps",
-  num_train_epochs=50,
-  #fp16=False,
+  num_train_epochs=20,
+  fp16=True,
   gradient_checkpointing=False,
   save_steps=50,
   eval_steps=50,
@@ -317,19 +328,26 @@ training_args = Seq2SeqTrainingArguments(
   weight_decay=0.005,
   warmup_steps=1000,
   save_total_limit=2,
-  push_to_hub=True,
+  push_to_hub=False,
 )
+
 
 from transformers import Trainer
 trainer = Seq2SeqTrainer(
-    args=training_args,
     model=model1,
-    train_dataset=dataset["train"],
-    eval_dataset=dataset["test"],
+    args=training_args,
+    train_dataset=train_dataset,
+    eval_dataset=test_dataset,
     data_collator=data_collator,
-    compute_metrics=compute_metrics,
-    tokenizer=processor.feature_extractor,
 )
 
+
+import torch
+torch.cuda.empty_cache()
+
 trainer.train()
+
 trainer.evaluate()
+
+
+
