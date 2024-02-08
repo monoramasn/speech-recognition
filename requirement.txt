@@ -5,6 +5,5 @@ evaluate
 jiwer
 gradio
 openai-whisper
-
-
-
+transformers
+accelerate
